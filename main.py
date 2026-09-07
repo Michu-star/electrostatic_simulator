@@ -11,7 +11,7 @@ initial_grid[-1] = 1.0
 
 
 # Jacobi
-def jacobi(initial_grid):
+def jacobi(initial_grid, tol=1e-6):
     grid = initial_grid.copy()
     iterations = 0
 
@@ -28,7 +28,7 @@ def jacobi(initial_grid):
 
         change = np.max(np.abs(grid - old_grid))
 
-        if change < 1e-6:
+        if change < tol:
             break
 
     print(f'Jacobi finished in {iterations} iterations')
@@ -37,7 +37,7 @@ def jacobi(initial_grid):
 
 
 # Gauss-Seidel
-def gs(initial_grid):
+def gs(initial_grid, tol=1e-6):
     grid = initial_grid.copy()
     iterations = 0
 
@@ -54,7 +54,7 @@ def gs(initial_grid):
 
         change = np.max(np.abs(grid - old_grid))
 
-        if change < 1e-6:
+        if change < tol:
             break
 
     print(f'Gauss-Seidel finished in {iterations} iterations')
@@ -63,7 +63,7 @@ def gs(initial_grid):
 
 
 # Successive Over-Relaxation
-def sor(initial_grid, w):
+def sor(initial_grid, tol=1e-6, w=1.5):
     grid = initial_grid.copy()
     iterations = 0
 
@@ -83,7 +83,7 @@ def sor(initial_grid, w):
 
         change = np.max(np.abs(grid - old_grid))
 
-        if change < 1e-6:
+        if change < tol:
             break
 
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
@@ -105,6 +105,6 @@ ax_gs.set_title("Gauss-Seidel")
 draw_grid(ax_gs, gs(initial_grid))
 
 ax_sor.set_title("Successive Over-Relaxation")
-draw_grid(ax_sor, sor(initial_grid, 1.5))
+draw_grid(ax_sor, sor(initial_grid, w=1.5))
 
 plt.show()
