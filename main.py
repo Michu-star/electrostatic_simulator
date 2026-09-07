@@ -9,6 +9,33 @@ initial_grid[:, -1] = 1.0
 initial_grid[0] = 1.0
 initial_grid[-1] = 1.0
 
+
+# Jacobi
+def jacobi(initial_grid):
+    grid = initial_grid.copy()
+    iterations = 0
+
+    while True:
+        iterations += 1
+        old_grid = grid.copy()
+
+        left_grid = grid[1:-1, :-2]
+        right_grid = grid[1:-1, 2:]
+        bottom_grid = grid[:-2, 1:-1]
+        top_grid = grid[2:, 1:-1]
+
+        grid[1:-1, 1:-1] = 0.25 * (left_grid + right_grid + bottom_grid + top_grid)
+
+        change = np.max(np.abs(grid - old_grid))
+
+        if change < 1e-6:
+            break
+
+    print(f'Jacobi finished in {iterations} iterations')
+
+    return grid
+
+
 # Gauss-Seidel
 def gs(initial_grid):
     grid = initial_grid.copy()
@@ -33,6 +60,7 @@ def gs(initial_grid):
     print(f'Gauss-Seidel finished in {iterations} iterations')
 
     return grid
+
 
 # Successive Over-Relaxation
 def sor(initial_grid, w):
@@ -68,12 +96,15 @@ def draw_grid(ax, grid):
     ax.figure.colorbar(image, ax=ax, label="Potential V")
 
 
-fig, (ax_gs, ax_sor) = plt.subplots(1, 2)
+fig, (ax_j, ax_gs, ax_sor) = plt.subplots(1, 3)
 
-ax_gs.set_title("Gauss-Seidel Grid Plot")
+ax_j.set_title("Jacobi")
+draw_grid(ax_j, jacobi(initial_grid))
+
+ax_gs.set_title("Gauss-Seidel")
 draw_grid(ax_gs, gs(initial_grid))
 
-ax_sor.set_title("Successive Over-Relaxation Grid Plot")
+ax_sor.set_title("Successive Over-Relaxation")
 draw_grid(ax_sor, sor(initial_grid, 1.5))
 
 plt.show()
