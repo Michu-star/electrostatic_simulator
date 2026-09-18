@@ -32,7 +32,7 @@ def main():
     plane.set_potential((50, -10), -10.0)
 
     V = jacobi(plane)
-    dV_dy, dV_dx = np.gradient(V, plane.dx, plane.dy)
+    dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx
     Ey = -dV_dy
