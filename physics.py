@@ -22,9 +22,9 @@ def update_edges(grid, fixed):
 
 
 # Jacobi
-def jacobi(initial_grid, fixed, tol=1e-6):
-    grid = initial_grid.copy()
-    free = ~fixed
+def jacobi(system, tol=1e-6):
+    grid = system.grid.copy()
+    free = ~system.fixed
 
     iterations = 0
 
@@ -60,8 +60,9 @@ def jacobi(initial_grid, fixed, tol=1e-6):
 
 
 # Gauss-Seidel
-def gs(initial_grid, fixed, tol=1e-6):
-    grid = initial_grid.copy()
+def gs(system, tol=1e-6):
+    grid = system.grid.copy()
+    fixed = system.fixed
     iterations = 0
 
     while True:
@@ -92,8 +93,9 @@ def gs(initial_grid, fixed, tol=1e-6):
 
 
 # Successive Over-Relaxation
-def sor(initial_grid, fixed, tol=1e-6, w=1.5):
-    grid = initial_grid.copy()
+def sor(system, tol=1e-6, w=1.5):
+    grid = system.grid.copy()
+    fixed = system.fixed
     iterations = 0
 
     while True:
