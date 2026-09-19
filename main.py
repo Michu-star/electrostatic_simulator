@@ -1,18 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from physics import ElectrostaticGrid, jacobi, gs, sor
+from physics import ElectrostaticSystem, jacobi, gs, sor
 from plotting import draw_grid, draw_streamplot
 
 
 def main():
-    plane = ElectrostaticGrid((101, 101), 10, 10)
+    plane = ElectrostaticSystem((101, 101), 5, 10)
 
     # Positive electrode
     plane.set_potential((50, 10), 10.0)
 
     # Negative electrode
-    plane.set_potential((50, -10), -10.0)
+    # plane.set_potential((50, -10), -10.0)
 
     V = jacobi(plane)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)

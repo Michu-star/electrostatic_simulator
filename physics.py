@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class ElectrostaticGrid:
+class ElectrostaticSystem:
     def __init__(self, shape, width, height):
         self.grid = np.zeros(shape)
         self.fixed = np.zeros(shape, dtype=bool)
@@ -43,6 +43,9 @@ def jacobi(system, tol=1e-6):
     grid = system.grid.copy()
     free = ~system.fixed
 
+    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
+    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+
     iterations = 0
 
     while True:
@@ -56,7 +59,8 @@ def jacobi(system, tol=1e-6):
         bottom_grid = old_grid[2:, 1:-1]
         top_grid = old_grid[:-2, 1:-1]
 
-        new_grid[1:-1, 1:-1] = 0.25 * (left_grid + right_grid + bottom_grid + top_grid)
+        new_grid[1:-1, 1:-1] = (y_ratio * (left_grid + right_grid)
+                                + x_ratio * (bottom_grid + top_grid))
 
         # Handle edges
         new_grid[:, 0] = old_grid[:, 1] # left
@@ -80,6 +84,10 @@ def jacobi(system, tol=1e-6):
 def gs(system, tol=1e-6):
     grid = system.grid.copy()
     fixed = system.fixed
+
+    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
+    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+
     iterations = 0
 
     while True:
@@ -92,10 +100,8 @@ def gs(system, tol=1e-6):
                 if fixed[j, k]:
                     continue
                 else:
-                    grid[j,k] = 0.25 * (
-                        grid[j + 1, k] + grid[j - 1, k]
-                        + grid[j, k + 1] + grid[j, k - 1]
-                    )
+                    grid[j,k] = (x_ratio * (grid[j + 1, k] + grid[j - 1, k])
+                                 + y_ratio * (grid[j, k + 1] + grid[j, k - 1]))
 
         update_edges(grid, fixed)
 
@@ -113,6 +119,10 @@ def gs(system, tol=1e-6):
 def sor(system, tol=1e-6, w=1.5):
     grid = system.grid.copy()
     fixed = system.fixed
+
+    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
+    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+
     iterations = 0
 
     while True:
@@ -125,10 +135,8 @@ def sor(system, tol=1e-6, w=1.5):
                 if fixed[j,k]:
                     continue
                 else:
-                    gs_value = 0.25 * (
-                            grid[j + 1, k] + grid[j - 1, k]
-                            + grid[j, k + 1] + grid[j, k - 1]
-                    )
+                    gs_value = (x_ratio * (grid[j + 1, k] + grid[j - 1, k])
+                                 + y_ratio * (grid[j, k + 1] + grid[j, k - 1]))
 
                     grid[j, k] = (1 - w) * grid[j, k] + w * gs_value
 
