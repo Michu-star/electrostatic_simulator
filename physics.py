@@ -1,6 +1,23 @@
 import numpy as np
 
 
+class ElectrostaticGrid:
+    def __init__(self, shape, width, height):
+        self.grid = np.zeros(shape)
+        self.fixed = np.zeros(shape, dtype=bool)
+        self.width, self.height = width, height
+
+        self.x = np.linspace(0, self.width, shape[1])
+        self.y = np.linspace(0, self.height, shape[0])
+
+        self.dx = width / (shape[1] - 1)
+        self.dy = height / (shape[0] - 1)
+
+    def set_potential(self, region, potential):
+        self.grid[region] = potential
+        self.fixed[region] = True
+
+
 def update_edges(grid, fixed):
     for i in range(0, grid.shape[0]):
         # left edge

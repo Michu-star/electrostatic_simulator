@@ -1,25 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from physics import jacobi, gs, sor
+from physics import ElectrostaticGrid, jacobi, gs, sor
 from plotting import draw_grid, draw_streamplot
-
-
-class ElectrostaticGrid:
-    def __init__(self, shape, width, height):
-        self.grid = np.zeros(shape)
-        self.fixed = np.zeros(shape, dtype=bool)
-        self.width, self.height = width, height
-
-        self.x = np.linspace(0, self.width, shape[1])
-        self.y = np.linspace(0, self.height, shape[0])
-
-        self.dx = width / (shape[1] - 1)
-        self.dy = height / (shape[0] - 1)
-
-    def set_potential(self, region, potential):
-        self.grid[region] = potential
-        self.fixed[region] = True
 
 
 def main():
