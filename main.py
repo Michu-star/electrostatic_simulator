@@ -9,7 +9,10 @@ def main():
     plane = ElectrostaticSystem((101, 101), 5, 10)
 
     # Positive electrode
-    plane.set_potential((50, 10), 10.0)
+    #plane.set_potential((50, 10), 10.0)
+
+    # Some charge density
+    plane.set_charge_density((50, 50), 1e-3)
 
     # Negative electrode
     # plane.set_potential((50, -10), -10.0)

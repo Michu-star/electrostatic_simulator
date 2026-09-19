@@ -3,8 +3,9 @@ import numpy as np
 
 class ElectrostaticSystem:
     def __init__(self, shape, width, height):
-        self.grid = np.zeros(shape)
+        self.grid = np.zeros(shape, dtype=float)
         self.fixed = np.zeros(shape, dtype=bool)
+        self.rho = np.zeros(shape, dtype=float)
         self.width, self.height = width, height
 
         self.x = np.linspace(0, self.width, shape[1])
@@ -16,6 +17,9 @@ class ElectrostaticSystem:
     def set_potential(self, region, potential):
         self.grid[region] = potential
         self.fixed[region] = True
+
+    def set_charge_density(self, region, rho):
+        self.grid[region] = rho
 
 
 def update_edges(grid, fixed):
@@ -39,12 +43,13 @@ def update_edges(grid, fixed):
 
 
 # Jacobi
-def jacobi(system, tol=1e-6):
+def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     free = ~system.fixed
 
     x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
     y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+    source_ratio = 0.5 * (system.dx * system.dy) ** 2 / (system.dx ** 2 + system.dy ** 2)
 
     iterations = 0
 
@@ -59,8 +64,11 @@ def jacobi(system, tol=1e-6):
         bottom_grid = old_grid[2:, 1:-1]
         top_grid = old_grid[:-2, 1:-1]
 
-        new_grid[1:-1, 1:-1] = (y_ratio * (left_grid + right_grid)
-                                + x_ratio * (bottom_grid + top_grid))
+        new_grid[1:-1, 1:-1] = (
+                y_ratio * (left_grid + right_grid)
+                + x_ratio * (bottom_grid + top_grid)
+                + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
+        )
 
         # Handle edges
         new_grid[:, 0] = old_grid[:, 1] # left
