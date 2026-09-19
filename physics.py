@@ -19,7 +19,7 @@ class ElectrostaticSystem:
         self.fixed[region] = True
 
     def set_charge_density(self, region, rho):
-        self.grid[region] = rho
+        self.rho[region] = rho
 
 
 def update_edges(grid, fixed):
@@ -42,14 +42,22 @@ def update_edges(grid, fixed):
             grid[-1, j] = grid[-2, j]
 
 
+def set_ratios(system):
+    denominator = 2 * (system.dx ** 2 + system.dy ** 2)
+
+    x_ratio = system.dx ** 2 / denominator
+    y_ratio = system.dy ** 2 / denominator
+    source_ratio = (system.dx * system.dy) ** 2 / denominator
+
+    return x_ratio, y_ratio, source_ratio
+
+
 # Jacobi
 def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     free = ~system.fixed
 
-    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
-    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
-    source_ratio = 0.5 * (system.dx * system.dy) ** 2 / (system.dx ** 2 + system.dy ** 2)
+    x_ratio, y_ratio, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -89,12 +97,11 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
 
 
 # Gauss-Seidel
-def gs(system, tol=1e-6):
+def gs(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     fixed = system.fixed
 
-    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
-    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+    x_ratio, y_ratio, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -108,8 +115,11 @@ def gs(system, tol=1e-6):
                 if fixed[j, k]:
                     continue
                 else:
-                    grid[j,k] = (x_ratio * (grid[j + 1, k] + grid[j - 1, k])
-                                 + y_ratio * (grid[j, k + 1] + grid[j, k - 1]))
+                    grid[j,k] = (
+                            x_ratio * (grid[j + 1, k] + grid[j - 1, k])
+                            + y_ratio * (grid[j, k + 1] + grid[j, k - 1])
+                            + source_ratio * system.rho[j, k] / epsilon_0
+                    )
 
         update_edges(grid, fixed)
 
@@ -124,12 +134,11 @@ def gs(system, tol=1e-6):
 
 
 # Successive Over-Relaxation
-def sor(system, tol=1e-6, w=1.5):
+def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     fixed = system.fixed
 
-    x_ratio = 0.5 * system.dx ** 2 / (system.dx ** 2 + system.dy ** 2)
-    y_ratio = 0.5 * system.dy ** 2 / (system.dx ** 2 + system.dy ** 2)
+    x_ratio, y_ratio, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -143,8 +152,11 @@ def sor(system, tol=1e-6, w=1.5):
                 if fixed[j,k]:
                     continue
                 else:
-                    gs_value = (x_ratio * (grid[j + 1, k] + grid[j - 1, k])
-                                 + y_ratio * (grid[j, k + 1] + grid[j, k - 1]))
+                    gs_value = (
+                            x_ratio * (grid[j + 1, k] + grid[j - 1, k])
+                            + y_ratio * (grid[j, k + 1] + grid[j, k - 1])
+                            + source_ratio * system.rho[j, k] / epsilon_0
+                    )
 
                     grid[j, k] = (1 - w) * grid[j, k] + w * gs_value
 

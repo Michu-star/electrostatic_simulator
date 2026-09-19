@@ -11,11 +11,18 @@ def main():
     # Positive electrode
     #plane.set_potential((50, 10), 10.0)
 
-    # Some charge density
-    plane.set_charge_density((50, 50), 1e-3)
-
     # Negative electrode
     # plane.set_potential((50, -10), -10.0)
+
+    # Make edges zero
+    plane.set_potential((0, slice(None)), 0)
+    plane.set_potential((-1, slice(None)), 0)
+    plane.set_potential((slice(None), 0), 0)
+    plane.set_potential((slice(None), -1), 0)
+
+    # Charge density
+    plane.set_charge_density((50, 10), 1e-9)
+    plane.set_charge_density((50, -10), -1e-9)
 
     V = jacobi(plane)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
