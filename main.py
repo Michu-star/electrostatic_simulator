@@ -30,6 +30,13 @@ def main():
     Ex = -dV_dx
     Ey = -dV_dy
 
+    V_j = jacobi(plane)
+    V_gs = gs(plane)
+    V_sor = sor(plane)
+
+    print(np.max(np.abs(V_j - V_gs)))
+    print(np.max(np.abs(V_j - V_sor)))
+
 
     fig, (ax_V, ax_E) = plt.subplots(1, 2)
 

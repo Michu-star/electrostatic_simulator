@@ -52,6 +52,31 @@ def set_ratios(system):
     return x_ratio, y_ratio, source_ratio
 
 
+def residual(system, grid, epsilon_0=8.85e-12):
+    x_ratio, y_ratio, source_ratio = set_ratios(system)
+
+    target = (
+        y_ratio * (
+            grid[1:-1, :-2]
+            + grid[1:-1, 2:]
+        )
+        + x_ratio * (
+            grid[:-2, 1:-1]
+            + grid[2:, 1:-1]
+        )
+        + source_ratio
+        * system.rho[1:-1, 1:-1]
+        / epsilon_0
+    )
+
+    difference = target - grid[1:-1, 1:-1]
+
+    # Ignore fixed cells
+    free = ~system.fixed[1:-1, 1:-1]
+
+    return np.max(np.abs(difference[free]))
+
+
 # Jacobi
 def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
@@ -86,9 +111,9 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
 
         grid[free] = new_grid[free]
 
-        change = np.max(np.abs(grid - old_grid))
+        # change = np.max(np.abs(grid - old_grid))
 
-        if change < tol:
+        if residual(system, grid, epsilon_0) < tol:
             break
 
     print(f'Jacobi finished in {iterations} iterations')
@@ -107,7 +132,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
 
     while True:
         iterations += 1
-        old_grid = grid.copy()
+        # old_grid = grid.copy()
 
         # Handle center
         for j in range(1, grid.shape[0] - 1):
@@ -123,9 +148,9 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
 
         update_edges(grid, fixed)
 
-        change = np.max(np.abs(grid - old_grid))
+        # change = np.max(np.abs(grid - old_grid))
 
-        if change < tol:
+        if residual(system, grid, epsilon_0) < tol:
             break
 
     print(f'Gauss-Seidel finished in {iterations} iterations')
@@ -144,7 +169,7 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
 
     while True:
         iterations += 1
-        old_grid = grid.copy()
+        # old_grid = grid.copy()
 
         # Handle center
         for j in range(1, grid.shape[0] - 1):
@@ -162,9 +187,9 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
 
         update_edges(grid, fixed)
 
-        change = np.max(np.abs(grid - old_grid))
+        # change = np.max(np.abs(grid - old_grid))
 
-        if change < tol:
+        if residual(system, grid, epsilon_0) < tol:
             break
 
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
