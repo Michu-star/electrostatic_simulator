@@ -53,28 +53,27 @@ def set_ratios(system):
 
 
 def residual(system, grid, epsilon_0=8.85e-12):
-    x_ratio, y_ratio, source_ratio = set_ratios(system)
+    center = grid[1:-1, 1:-1]
 
-    target = (
-        y_ratio * (
-            grid[1:-1, :-2]
-            + grid[1:-1, 2:]
-        )
-        + x_ratio * (
-            grid[:-2, 1:-1]
-            + grid[2:, 1:-1]
-        )
-        + source_ratio
-        * system.rho[1:-1, 1:-1]
-        / epsilon_0
+    left = grid[1:-1, :-2]
+    right = grid[1:-1, 2:]
+
+    bottom = grid[:-2, 1:-1]
+    top = grid[2:, 1:-1]
+
+    laplacian = (
+        (left - 2 * center + right) / system.dx**2
+        + (bottom - 2 * center + top) / system.dy**2
     )
 
-    difference = target - grid[1:-1, 1:-1]
+    poisson_residual = (
+        laplacian
+        + system.rho[1:-1, 1:-1] / epsilon_0
+    )
 
-    # Ignore fixed cells
     free = ~system.fixed[1:-1, 1:-1]
 
-    return np.max(np.abs(difference[free]))
+    return np.max(np.abs(poisson_residual[free]))
 
 
 # Jacobi

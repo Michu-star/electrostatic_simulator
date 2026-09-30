@@ -30,12 +30,17 @@ def main():
     Ex = -dV_dx
     Ey = -dV_dy
 
-    V_j = jacobi(plane)
-    V_gs = gs(plane)
-    V_sor = sor(plane)
+    print()
+    for tol in [1e-3, 1e-4, 1e-5, 1e-6]:
+        V_j = jacobi(plane, tol=tol)
+        V_gs = gs(plane, tol=tol)
+        V_sor = sor(plane, tol=tol)
 
-    print(np.max(np.abs(V_j - V_gs)))
-    print(np.max(np.abs(V_j - V_sor)))
+        print(f"\ntol = {tol}")
+        print("J-GS:", np.max(np.abs(V_j - V_gs)))
+        print("J-SOR:", np.max(np.abs(V_j - V_sor)))
+        print("GS-SOR:", np.max(np.abs(V_gs - V_sor)))
+        print()
 
 
     fig, (ax_V, ax_E) = plt.subplots(1, 2)
