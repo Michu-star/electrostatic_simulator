@@ -24,7 +24,7 @@ def main():
     plane.set_charge_density((50, 10), 1e-9)
     plane.set_charge_density((50, -10), -1e-9)
 
-    V = jacobi(plane)
+    V = jacobi(plane, tol=1e-12)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx
@@ -37,9 +37,9 @@ def main():
         V_sor = sor(plane, tol=tol)
 
         print(f"\ntol = {tol}")
-        print("J-GS:", np.max(np.abs(V_j - V_gs)))
-        print("J-SOR:", np.max(np.abs(V_j - V_sor)))
-        print("GS-SOR:", np.max(np.abs(V_gs - V_sor)))
+        print("J-best:", np.max(np.abs(V_j - V)))
+        print("GS-best:", np.max(np.abs(V_gs - V)))
+        print("SOR-best:", np.max(np.abs(V_sor - V)))
         print()
 
 
