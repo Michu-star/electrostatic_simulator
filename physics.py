@@ -77,7 +77,7 @@ def residual(system, grid, epsilon_0=8.85e-12):
 
 
 # Jacobi
-def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
+def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     grid = system.grid.copy()
     free = ~system.fixed
 
@@ -113,7 +113,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 100 == 0:
-            if residual(system, grid, epsilon_0) < tol:
+            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
                 break
 
     print(f'Jacobi finished in {iterations} iterations')
@@ -122,7 +122,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
 
 
 # Gauss-Seidel
-def gs(system, tol=1e-6, epsilon_0=8.85e-12):
+def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
     grid = system.grid.copy()
     fixed = system.fixed
 
@@ -151,7 +151,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol:
+            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
                 break
 
     print(f'Gauss-Seidel finished in {iterations} iterations')
@@ -160,7 +160,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
 
 
 # Successive Over-Relaxation
-def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
+def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=1000):
     grid = system.grid.copy()
     fixed = system.fixed
 
@@ -191,7 +191,7 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol:
+            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
                 break
 
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
