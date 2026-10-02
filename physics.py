@@ -112,8 +112,9 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
 
         # change = np.max(np.abs(grid - old_grid))
 
-        if residual(system, grid, epsilon_0) < tol:
-            break
+        if iterations % 100 == 0:
+            if residual(system, grid, epsilon_0) < tol:
+                break
 
     print(f'Jacobi finished in {iterations} iterations')
 
@@ -149,8 +150,9 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
 
         # change = np.max(np.abs(grid - old_grid))
 
-        if residual(system, grid, epsilon_0) < tol:
-            break
+        if iterations % 50 == 0:
+            if residual(system, grid, epsilon_0) < tol:
+                break
 
     print(f'Gauss-Seidel finished in {iterations} iterations')
 
@@ -188,8 +190,9 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
 
         # change = np.max(np.abs(grid - old_grid))
 
-        if residual(system, grid, epsilon_0) < tol:
-            break
+        if iterations % 50 == 0:
+            if residual(system, grid, epsilon_0) < tol:
+                break
 
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
 
