@@ -1,42 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from physics import jacobi, gs, sor
+from physics import ElectrostaticSystem, jacobi, gs, sor
 from plotting import draw_grid, draw_streamplot
 
 
-class ElectrostaticGrid:
-    def __init__(self, shape, width, height):
-        self.grid = np.zeros(shape)
-        self.fixed = np.zeros(shape, dtype=bool)
-        self.width, self.height = width, height
-
-        self.x = np.linspace(0, self.width, shape[1])
-        self.y = np.linspace(0, self.height, shape[0])
-
-        self.dx = width / (shape[1] - 1)
-        self.dy = height / (shape[0] - 1)
-
-    def set_potential(self, region, potential):
-        self.grid[region] = potential
-        self.fixed[region] = True
-
-
 def main():
-    plane = ElectrostaticGrid((101, 101), 10, 10)
+    plane = ElectrostaticSystem((101, 101), 5, 10)
 
     # Positive electrode
-    plane.set_potential((50, 10), 10.0)
+    #plane.set_potential((50, 10), 10.0)
 
     # Negative electrode
-    plane.set_potential((50, -10), -10.0)
+    # plane.set_potential((50, -10), -10.0)
 
-    V = jacobi(plane)
-    dV_dy, dV_dx = np.gradient(V, plane.dx, plane.dy)
+    # Make edges zero
+    plane.set_potential((0, slice(None)), 0)
+    plane.set_potential((-1, slice(None)), 0)
+    plane.set_potential((slice(None), 0), 0)
+    plane.set_potential((slice(None), -1), 0)
+
+    # Charge density
+    plane.set_charge_density((50, 10), 1e-9)
+    plane.set_charge_density((50, -10), -1e-9)
+
+    V = jacobi(plane, tol=1e-12)
+    dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx
     Ey = -dV_dy
 
+    '''
+    print()
+    for tol in [1e-3, 1e-4, 1e-5, 1e-6]:
+        V_j = jacobi(plane, tol=tol)
+        V_gs = gs(plane, tol=tol)
+        V_sor = sor(plane, tol=tol)
+
+        print(f"\ntol = {tol}")
+        print("J-best:", np.max(np.abs(V_j - V)))
+        print("GS-best:", np.max(np.abs(V_gs - V)))
+        print("SOR-best:", np.max(np.abs(V_sor - V)))
+        print()
+    '''
 
     fig, (ax_V, ax_E) = plt.subplots(1, 2)
 

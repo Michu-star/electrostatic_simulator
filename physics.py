@@ -45,11 +45,11 @@ def update_edges(grid, fixed):
 def set_ratios(system):
     denominator = 2 * (system.dx ** 2 + system.dy ** 2)
 
-    x_ratio = system.dx ** 2 / denominator
-    y_ratio = system.dy ** 2 / denominator
+    coeff_x = system.dy ** 2 / denominator
+    coeff_y = system.dx ** 2 / denominator
     source_ratio = (system.dx * system.dy) ** 2 / denominator
 
-    return x_ratio, y_ratio, source_ratio
+    return coeff_x, coeff_y, source_ratio
 
 
 def residual(system, grid, epsilon_0=8.85e-12):
@@ -81,7 +81,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     free = ~system.fixed
 
-    x_ratio, y_ratio, source_ratio = set_ratios(system)
+    coeff_x, coeff_y, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -97,8 +97,8 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12):
         top_grid = old_grid[:-2, 1:-1]
 
         new_grid[1:-1, 1:-1] = (
-                y_ratio * (left_grid + right_grid)
-                + x_ratio * (bottom_grid + top_grid)
+                coeff_x * (left_grid + right_grid)
+                + coeff_y * (bottom_grid + top_grid)
                 + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
         )
 
@@ -125,7 +125,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     fixed = system.fixed
 
-    x_ratio, y_ratio, source_ratio = set_ratios(system)
+    coeff_x, coeff_y, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -140,8 +140,8 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12):
                     continue
                 else:
                     grid[j,k] = (
-                            x_ratio * (grid[j + 1, k] + grid[j - 1, k])
-                            + y_ratio * (grid[j, k + 1] + grid[j, k - 1])
+                            coeff_y * (grid[j + 1, k] + grid[j - 1, k])
+                            + coeff_x * (grid[j, k + 1] + grid[j, k - 1])
                             + source_ratio * system.rho[j, k] / epsilon_0
                     )
 
@@ -162,7 +162,7 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
     grid = system.grid.copy()
     fixed = system.fixed
 
-    x_ratio, y_ratio, source_ratio = set_ratios(system)
+    coeff_x, coeff_y, source_ratio = set_ratios(system)
 
     iterations = 0
 
@@ -177,8 +177,8 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12):
                     continue
                 else:
                     gs_value = (
-                            x_ratio * (grid[j + 1, k] + grid[j - 1, k])
-                            + y_ratio * (grid[j, k + 1] + grid[j, k - 1])
+                            coeff_y * (grid[j + 1, k] + grid[j - 1, k])
+                            + coeff_x * (grid[j, k + 1] + grid[j, k - 1])
                             + source_ratio * system.rho[j, k] / epsilon_0
                     )
 
