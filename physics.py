@@ -85,7 +85,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
 
     iterations = 0
 
-    while True:
+    while iterations < max_iter:
         iterations += 1
         old_grid = grid.copy()
         new_grid = grid.copy()
@@ -113,7 +113,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 100 == 0:
-            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
+            if residual(system, grid, epsilon_0) < tol:
                 break
 
     print(f'Jacobi finished in {iterations} iterations')
@@ -129,69 +129,43 @@ def checkerboard_mask(shape):
 # Red-Black Gauss-Seidel
 def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     grid = system.grid.copy()
-    free = ~system.fixed
+    fixed = system.fixed
+    rho = system.rho
 
-    # crate check board mask
-    red = checkerboard_mask(grid.shape)
-    black = ~red
+    # Precompute interior checkerboard masks
+    r, c = np.indices(grid.shape)
+    free_interior = ~fixed[1:-1, 1:-1]
+    red_interior = ((r[1:-1, 1:-1] + c[1:-1, 1:-1]) % 2 == 0) & free_interior
+    black_interior = ((r[1:-1, 1:-1] + c[1:-1, 1:-1]) % 2 == 1) & free_interior
 
     coeff_x, coeff_y, source_ratio = set_ratios(system)
-
     iterations = 0
 
-    while True:
+    while iterations < max_iter:
         iterations += 1
 
-        # update red cells
-        old_grid = grid.copy()
-        new_grid = grid.copy()
-
-        # Handle center
-        left_grid = old_grid[1:-1, :-2]
-        right_grid = old_grid[1:-1, 2:]
-        bottom_grid = old_grid[2:, 1:-1]
-        top_grid = old_grid[:-2, 1:-1]
-
-        new_grid[1:-1, 1:-1] = (
-                coeff_x * (left_grid + right_grid)
-                + coeff_y * (bottom_grid + top_grid)
-                + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
+        # 1. Update red cells
+        stencil = (
+                coeff_y * (grid[:-2, 1:-1] + grid[2:, 1:-1])
+                + coeff_x * (grid[1:-1, :-2] + grid[1:-1, 2:])
+                + source_ratio * rho[1:-1, 1:-1] / epsilon_0
         )
+        grid[1:-1, 1:-1][red_interior] = stencil[red_interior]
 
-        # Handle edges
-        new_grid[:, 0] = old_grid[:, 1]  # left
-        new_grid[:, -1] = old_grid[:, -2]  # right
-        new_grid[0, :] = old_grid[1, :]  # bottom
-        new_grid[-1, :] = old_grid[-2, :]  # top
-
-        grid[free & red] = new_grid[free & red]
-
-        # update black cells
-        old_grid = grid.copy()
-        new_grid = grid.copy()
-
-        # Handle center
-        left_grid = old_grid[1:-1, :-2]
-        right_grid = old_grid[1:-1, 2:]
-        bottom_grid = old_grid[2:, 1:-1]
-        top_grid = old_grid[:-2, 1:-1]
-
-        new_grid[1:-1, 1:-1] = (
-                coeff_x * (left_grid + right_grid)
-                + coeff_y * (bottom_grid + top_grid)
-                + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
+        # 2. Update black cells
+        stencil = (
+                coeff_y * (grid[:-2, 1:-1] + grid[2:, 1:-1])
+                + coeff_x * (grid[1:-1, :-2] + grid[1:-1, 2:])
+                + source_ratio * rho[1:-1, 1:-1] / epsilon_0
         )
+        grid[1:-1, 1:-1][black_interior] = stencil[black_interior]
 
-        # Handle edges
-        new_grid[:, 0] = old_grid[:, 1]  # left
-        new_grid[:, -1] = old_grid[:, -2]  # right
-        new_grid[0, :] = old_grid[1, :]  # bottom
-        new_grid[-1, :] = old_grid[-2, :]  # top
+        # 3. Handle boundary conditions
+        update_edges(grid, fixed)
 
-        grid[free & black] = new_grid[free & black]
-
+        # Check residual periodically
         if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
+            if residual(system, grid, epsilon_0) < tol:
                 break
 
     print(f'Red-Black Gauss-Seidel finished in {iterations} iterations')
@@ -200,7 +174,7 @@ def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
 
 
 # Gauss-Seidel
-def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
+def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=10_000):
     grid = system.grid.copy()
     fixed = system.fixed
 
@@ -208,7 +182,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
 
     iterations = 0
 
-    while True:
+    while iterations < max_iter:
         iterations += 1
         # old_grid = grid.copy()
 
@@ -229,7 +203,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
+            if residual(system, grid, epsilon_0) < tol:
                 break
 
     print(f'Gauss-Seidel finished in {iterations} iterations')
@@ -238,7 +212,7 @@ def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
 
 
 # Successive Over-Relaxation
-def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=1000):
+def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=10_000):
     grid = system.grid.copy()
     fixed = system.fixed
 
@@ -246,7 +220,7 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=1000):
 
     iterations = 0
 
-    while True:
+    while iterations < max_iter:
         iterations += 1
         # old_grid = grid.copy()
 
@@ -269,7 +243,7 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=1000):
         # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
+            if residual(system, grid, epsilon_0) < tol:
                 break
 
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
