@@ -121,6 +121,91 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     return grid
 
 
+def checkerboard_mask(grid):
+    mask = np.zeros(grid.shape, dtype=bool)
+    rows = np.arange(grid.shape[0])
+    cols = np.arange(grid.shape[1])
+    for row in rows:
+        for col in cols:
+            if (row + col) % 2 == 0:
+                mask[row, col] = True
+
+    return mask
+
+
+# Red-Black Gauss-Seidel
+def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
+    grid = system.grid.copy()
+    free = ~system.fixed
+
+    # crate check board mask
+    red = checkerboard_mask(grid)
+    black = ~checkerboard_mask(grid)
+
+    coeff_x, coeff_y, source_ratio = set_ratios(system)
+
+    iterations = 0
+
+    while True:
+        iterations += 1
+
+        # update red cells
+        old_grid = grid.copy()
+        new_grid = grid.copy()
+
+        # Handle center
+        left_grid = old_grid[1:-1, :-2]
+        right_grid = old_grid[1:-1, 2:]
+        bottom_grid = old_grid[2:, 1:-1]
+        top_grid = old_grid[:-2, 1:-1]
+
+        new_grid[1:-1, 1:-1] = (
+                coeff_x * (left_grid + right_grid)
+                + coeff_y * (bottom_grid + top_grid)
+                + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
+        )
+
+        # Handle edges
+        new_grid[:, 0] = old_grid[:, 1]  # left
+        new_grid[:, -1] = old_grid[:, -2]  # right
+        new_grid[0, :] = old_grid[1, :]  # bottom
+        new_grid[-1, :] = old_grid[-2, :]  # top
+
+        grid[free & red] = new_grid[free & red]
+
+        # update black cells
+        old_grid = grid.copy()
+        new_grid = grid.copy()
+
+        # Handle center
+        left_grid = old_grid[1:-1, :-2]
+        right_grid = old_grid[1:-1, 2:]
+        bottom_grid = old_grid[2:, 1:-1]
+        top_grid = old_grid[:-2, 1:-1]
+
+        new_grid[1:-1, 1:-1] = (
+                coeff_x * (left_grid + right_grid)
+                + coeff_y * (bottom_grid + top_grid)
+                + source_ratio * system.rho[1:-1, 1:-1] / epsilon_0
+        )
+
+        # Handle edges
+        new_grid[:, 0] = old_grid[:, 1]  # left
+        new_grid[:, -1] = old_grid[:, -2]  # right
+        new_grid[0, :] = old_grid[1, :]  # bottom
+        new_grid[-1, :] = old_grid[-2, :]  # top
+
+        grid[free & black] = new_grid[free & black]
+
+        if iterations % 50 == 0:
+            if residual(system, grid, epsilon_0) < tol or iterations >= max_iter:
+                break
+
+    print(f'Red-Black Gauss-Seidel finished in {iterations} iterations')
+
+    return grid
+
+
 # Gauss-Seidel
 def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=1000):
     grid = system.grid.copy()
