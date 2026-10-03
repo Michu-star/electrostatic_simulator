@@ -121,16 +121,9 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     return grid
 
 
-def checkerboard_mask(grid):
-    mask = np.zeros(grid.shape, dtype=bool)
-    rows = np.arange(grid.shape[0])
-    cols = np.arange(grid.shape[1])
-    for row in rows:
-        for col in cols:
-            if (row + col) % 2 == 0:
-                mask[row, col] = True
-
-    return mask
+def checkerboard_mask(shape):
+    r, c = np.indices(shape)
+    return (r + c) % 2 == 0
 
 
 # Red-Black Gauss-Seidel
@@ -139,8 +132,8 @@ def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     free = ~system.fixed
 
     # crate check board mask
-    red = checkerboard_mask(grid)
-    black = ~checkerboard_mask(grid)
+    red = checkerboard_mask(grid.shape)
+    black = ~red
 
     coeff_x, coeff_y, source_ratio = set_ratios(system)
 
