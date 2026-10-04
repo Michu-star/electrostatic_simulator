@@ -22,6 +22,13 @@ class ElectrostaticSystem:
     def set_charge_density(self, region, rho):
         self.rho[region] = rho
 
+    def add_point_charge(self, x, y, q):
+        """Place a point charge q (in Coulombs) at physical coordinate (x, y)."""
+        col = int(round(x / self.dx))
+        row = int(round(y / self.dy))
+        # Spread total charge over cell area
+        self.rho[row, col] += q / (self.dx * self.dy)
+
 
 def update_edges(grid, fixed):
     free = ~fixed

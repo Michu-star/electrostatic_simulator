@@ -20,9 +20,10 @@ def main():
     plane.set_potential((slice(None), 0), 0)
     plane.set_potential((slice(None), -1), 0)
 
-    # Charge density
-    plane.set_charge_density((50, 10), 1e-9)
-    plane.set_charge_density((50, -10), -1e-9)
+    # Point charges
+    plane.add_point_charge(4, 5, 1e-9)
+    plane.add_point_charge(1, 5, -1e-9)
+    plane.add_point_charge(1, 9, 1e-9)
 
     V = jacobi(plane, tol=1e-10)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
