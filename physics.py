@@ -24,23 +24,11 @@ class ElectrostaticSystem:
 
 
 def update_edges(grid, fixed):
-    for i in range(0, grid.shape[0]):
-        # left edge
-        if not fixed[i, 0]:
-            grid[i, 0] = grid[i, 1]
-
-        # right edge
-        if not fixed[i, -1]:
-            grid[i, -1] = grid[i, -2]
-
-    for j in range(0, grid.shape[1]):
-        # bottom edge
-        if not fixed[0, j]:
-            grid[0, j] = grid[1, j]
-
-        # top edge
-        if not fixed[-1, j]:
-            grid[-1, j] = grid[-2, j]
+    free = ~fixed
+    grid[free[:, 0], 0] = grid[free[:, 0], 1]
+    grid[free[:, -1], -1] = grid[free[:, -1], -2]
+    grid[0, free[0, :]] = grid[1, free[0, :]]
+    grid[-1, free[-1, :]] = grid[-2, free[-1, :]]
 
 
 def set_ratios(system):
@@ -74,7 +62,10 @@ def residual(system, grid, epsilon_0=8.85e-12):
 
     free = ~system.fixed[1:-1, 1:-1]
 
-    return np.max(np.abs(poisson_residual[free]))
+    if np.any(free):
+        return np.linalg.norm(np.abs(poisson_residual[free]))
+    else:
+        return 0.0
 
 
 # Jacobi
@@ -105,14 +96,9 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
         )
 
         # Handle edges
-        new_grid[:, 0] = old_grid[:, 1] # left
-        new_grid[:, -1] = old_grid[:, -2] # right
-        new_grid[0, :] = old_grid[1, :] # bottom
-        new_grid[-1, :] = old_grid[-2, :] # top
+        update_edges(new_grid, system.fixed)
 
         grid[free] = new_grid[free]
-
-        # change = np.max(np.abs(grid - old_grid))
 
         if iterations % 100 == 0 or iterations == max_iter:
             res = residual(system, grid, epsilon_0)

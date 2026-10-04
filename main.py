@@ -24,7 +24,7 @@ def main():
     plane.set_charge_density((50, 10), 1e-9)
     plane.set_charge_density((50, -10), -1e-9)
 
-    V = rb_sor(plane, tol=1e-10)
+    V = jacobi(plane, tol=1e-10)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx
