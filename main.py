@@ -6,13 +6,16 @@ from plotting import draw_grid, draw_streamplot
 
 
 def main():
-    plane = ElectrostaticSystem((101, 101), 5, 10)
+    plane = ElectrostaticSystem((201, 201), 5, 10)
 
     # Positive electrode
-    #plane.set_potential((50, 10), 10.0)
+    plane.add_square_electrode(0.5, 1, 4.5, 1 + plane.dy, 200)
 
     # Negative electrode
-    # plane.set_potential((50, -10), -10.0)
+    plane.add_square_electrode(0.5, 9, 4.5, 9 + plane.dy, -200)
+
+    # Point charges
+    plane.add_point_charge(4, 6, 1e-9)
 
     # Make edges zero
     plane.set_potential((0, slice(None)), 0)
@@ -20,12 +23,7 @@ def main():
     plane.set_potential((slice(None), 0), 0)
     plane.set_potential((slice(None), -1), 0)
 
-    # Point charges
-    plane.add_point_charge(4, 5, 1e-9)
-    plane.add_point_charge(1, 5, -1e-9)
-    plane.add_point_charge(1, 9, 1e-9)
-
-    V = rb_sor(plane, tol=1e-10)
+    V = rb_sor(plane, tol=1e-6)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx

@@ -19,8 +19,28 @@ class ElectrostaticSystem:
         self.grid[region] = potential
         self.fixed[region] = True
 
-    def set_charge_density(self, region, rho):
-        self.rho[region] = rho
+    def add_square_electrode(self, x1, y1, x2, y2, potential):
+        """Place a square electrode at constant potential (in Volts)
+         between physical coordinates (x1, y1) and (x2, y2)."""
+        if x2 < x1:
+            x1, x2 = x2, x1
+        if y2 < y1:
+            y1, y2 = y2, y1
+
+        col_1 = int(round(x1 / self.dx))
+        col_2 = int(round(x2 / self.dx))
+        row_1 = int(round(y1 / self.dy))
+        row_2 = int(round(y2 / self.dy))
+
+        # Clamp indices within grid bounds
+        row_1 = max(0, min(row_1, self.grid.shape[0] - 1))
+        row_2 = max(0, min(row_2, self.grid.shape[0] - 1))
+        col_1 = max(0, min(col_1, self.grid.shape[1] - 1))
+        col_2 = max(0, min(col_2, self.grid.shape[1] - 1))
+
+        # + 1 ensures the endpoint grid line is included
+        region = (slice(row_1, row_2 + 1), slice(col_1, col_2 + 1))
+        self.set_potential(region, potential)
 
     def add_point_charge(self, x, y, q):
         """Place a point charge q (in Coulombs) at physical coordinate (x, y)."""
@@ -141,7 +161,7 @@ def optimal_omega(system):
 
 
 # Red-Black SOR
-def rb_sor(system, tol=1e-6, w=None, epsilon_0=8.85e-12, max_iter=100_000):
+def rb_sor(system, tol=1e-6, w=None, epsilon_0=8.85e-12, max_iter=10_000):
     grid = system.grid.copy()
     fixed = system.fixed
     rho = system.rho
