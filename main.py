@@ -25,7 +25,7 @@ def main():
     plane.add_point_charge(1, 5, -1e-9)
     plane.add_point_charge(1, 9, 1e-9)
 
-    V = jacobi(plane, tol=1e-10)
+    V = rb_sor(plane, tol=1e-10)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx

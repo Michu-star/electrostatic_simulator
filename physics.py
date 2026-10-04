@@ -70,7 +70,8 @@ def residual(system, grid, epsilon_0=8.85e-12):
     free = ~system.fixed[1:-1, 1:-1]
 
     if np.any(free):
-        return np.linalg.norm(np.abs(poisson_residual[free]))
+        res_free = poisson_residual[free]
+        return np.sqrt(np.mean(res_free ** 2))  # RMS residual (mesh-independent)
     else:
         return 0.0
 
@@ -122,8 +123,16 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     return grid
 
 
+def optimal_omega(system):
+    """Calculates the theoretical optimal SOR parameter for a rectangular grid."""
+    ny, nx = system.grid.shape
+    denom = system.dx**2 + system.dy**2
+    rho_j = (system.dy**2 * np.cos(np.pi / (nx - 1)) + system.dx**2 * np.cos(np.pi / (ny - 1))) / denom
+    return 2.0 / (1.0 + np.sqrt(1.0 - rho_j**2))
+
+
 # Red-Black SOR
-def rb_sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=100_000):
+def rb_sor(system, tol=1e-6, w=None, epsilon_0=8.85e-12, max_iter=100_000):
     grid = system.grid.copy()
     fixed = system.fixed
     rho = system.rho
@@ -137,6 +146,9 @@ def rb_sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=100_000):
     coeff_x, coeff_y, source_ratio = set_ratios(system)
     iterations = 0
     converged = False
+
+    if w is None:
+        w = optimal_omega(system)
 
     while iterations < max_iter:
         iterations += 1
@@ -161,9 +173,9 @@ def rb_sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=100_000):
                 break
 
     if converged:
-        print(f'Jacobi finished in {iterations} iterations')
+        print(f'Red-Black SOR finished in {iterations} iterations')
     else:
-        warnings.warn(f'Jacobi did not converge in {iterations} iterations'
+        warnings.warn(f'Red-Black SOR did not converge in {iterations} iterations'
                       f'(final residual: {res:.2e} >= {tol:.2e})')
 
     return grid
