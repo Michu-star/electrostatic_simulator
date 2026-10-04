@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from physics import ElectrostaticSystem, jacobi, gs, sor, rb_sor
+from physics import ElectrostaticSystem, jacobi, rb_sor
 from plotting import draw_grid, draw_streamplot
 
 

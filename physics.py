@@ -37,6 +37,15 @@ def update_edges(grid, fixed):
     grid[0, free[0, :]] = grid[1, free[0, :]]
     grid[-1, free[-1, :]] = grid[-2, free[-1, :]]
 
+    if free[0, 0]:
+        grid[0, 0] = 0.5 * (grid[0, 1] + grid[1, 0])
+    if free[-1, 0]:
+        grid[-1, 0] = 0.5 * (grid[-1, 1] + grid[-2, 0])
+    if free[0, -1]:
+        grid[0, -1] = 0.5 * (grid[0, -2] + grid[1, -1])
+    if free[-1, -1]:
+        grid[-1, -1] = 0.5 * (grid[-1, -2] + grid[-2, -1])
+
 
 def set_ratios(system):
     denominator = 2 * (system.dx ** 2 + system.dy ** 2)
@@ -180,7 +189,8 @@ def rb_sor(system, tol=1e-6, w=None, epsilon_0=8.85e-12, max_iter=100_000):
 
     return grid
 
-
+# Legacy code
+'''
 # Gauss-Seidel
 def gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=10_000):
     grid = system.grid.copy()
@@ -257,3 +267,4 @@ def sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=10_000):
     print(f'Successive Over-Relaxation finished in {iterations} iterations')
 
     return grid
+'''
