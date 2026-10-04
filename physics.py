@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 
 class ElectrostaticSystem:
@@ -84,6 +85,7 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     coeff_x, coeff_y, source_ratio = set_ratios(system)
 
     iterations = 0
+    converged = False
 
     while iterations < max_iter:
         iterations += 1
@@ -112,18 +114,19 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
 
         # change = np.max(np.abs(grid - old_grid))
 
-        if iterations % 100 == 0:
-            if residual(system, grid, epsilon_0) < tol:
+        if iterations % 100 == 0 or iterations == max_iter:
+            res = residual(system, grid, epsilon_0)
+            if res < tol:
+                converged = True
                 break
 
-    print(f'Jacobi finished in {iterations} iterations')
+    if converged:
+        print(f'Jacobi finished in {iterations} iterations')
+    else:
+        warnings.warn(f'Jacobi did not converge in {iterations} iterations'
+                      f'(final residual: {res:.2e} >= {tol:.2e})')
 
     return grid
-
-
-def checkerboard_mask(shape):
-    r, c = np.indices(shape)
-    return (r + c) % 2 == 0
 
 
 # Red-Black Gauss-Seidel
@@ -140,6 +143,7 @@ def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
 
     coeff_x, coeff_y, source_ratio = set_ratios(system)
     iterations = 0
+    converged = False
 
     while iterations < max_iter:
         iterations += 1
@@ -164,11 +168,17 @@ def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
         update_edges(grid, fixed)
 
         # Check residual periodically
-        if iterations % 50 == 0:
-            if residual(system, grid, epsilon_0) < tol:
+        if iterations % 100 == 0 or iterations == max_iter:
+            res = residual(system, grid, epsilon_0)
+            if res < tol:
+                converged = True
                 break
 
-    print(f'Red-Black Gauss-Seidel finished in {iterations} iterations')
+    if converged:
+        print(f'Jacobi finished in {iterations} iterations')
+    else:
+        warnings.warn(f'Jacobi did not converge in {iterations} iterations'
+                      f'(final residual: {res:.2e} >= {tol:.2e})')
 
     return grid
 
