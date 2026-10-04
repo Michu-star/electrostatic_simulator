@@ -129,8 +129,8 @@ def jacobi(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     return grid
 
 
-# Red-Black Gauss-Seidel
-def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
+# Red-Black SOR
+def rb_sor(system, tol=1e-6, w=1.5, epsilon_0=8.85e-12, max_iter=100_000):
     grid = system.grid.copy()
     fixed = system.fixed
     rho = system.rho
@@ -148,23 +148,16 @@ def rb_gs(system, tol=1e-6, epsilon_0=8.85e-12, max_iter=100_000):
     while iterations < max_iter:
         iterations += 1
 
-        # 1. Update red cells
-        stencil = (
-                coeff_y * (grid[:-2, 1:-1] + grid[2:, 1:-1])
-                + coeff_x * (grid[1:-1, :-2] + grid[1:-1, 2:])
-                + source_ratio * rho[1:-1, 1:-1] / epsilon_0
-        )
-        grid[1:-1, 1:-1][red_interior] = stencil[red_interior]
+        # Update red and black cells
+        for mask in (red_interior, black_interior):
+            stencil = (
+                    coeff_y * (grid[:-2, 1:-1] + grid[2:, 1:-1])
+                    + coeff_x * (grid[1:-1, :-2] + grid[1:-1, 2:])
+                    + source_ratio * rho[1:-1, 1:-1] / epsilon_0
+            )
+            grid[1:-1, 1:-1][mask] = (1 - w) * grid[1:-1, 1:-1][mask] + w * stencil[mask]
 
-        # 2. Update black cells
-        stencil = (
-                coeff_y * (grid[:-2, 1:-1] + grid[2:, 1:-1])
-                + coeff_x * (grid[1:-1, :-2] + grid[1:-1, 2:])
-                + source_ratio * rho[1:-1, 1:-1] / epsilon_0
-        )
-        grid[1:-1, 1:-1][black_interior] = stencil[black_interior]
-
-        # 3. Handle boundary conditions
+        # Handle boundary conditions
         update_edges(grid, fixed)
 
         # Check residual periodically

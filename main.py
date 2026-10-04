@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from physics import ElectrostaticSystem, jacobi, gs, sor, rb_gs
+from physics import ElectrostaticSystem, jacobi, gs, sor, rb_sor
 from plotting import draw_grid, draw_streamplot
 
 
@@ -24,7 +24,7 @@ def main():
     plane.set_charge_density((50, 10), 1e-9)
     plane.set_charge_density((50, -10), -1e-9)
 
-    V = rb_gs(plane, tol=1e-10)
+    V = rb_sor(plane, tol=1e-10)
     dV_dy, dV_dx = np.gradient(V, plane.dy, plane.dx)
 
     Ex = -dV_dx
