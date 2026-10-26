@@ -1,5 +1,7 @@
 # 2D Electrostatic Poisson Solver (`electrostatic_simulator`)
 
+![Preview](preview.png)
+
 A 2D finite-difference solver for the electrostatic Poisson and Laplace equations on rectangular grids with arbitrary Dirichlet electrodes, point charges, and free (Neumann) boundary segments, written in Python with `NumPy` and `Matplotlib`.
 
 ## Physics & Numerical Discretization
@@ -45,6 +47,8 @@ $$
 
 2. **Vectorized Jacobi Iteration (`jacobi`)**:
    - Synchronous full-grid update using the previous step's potential values.
+
+![Preview](preview_benchmark.png)
 
 ## Project Structure
 
